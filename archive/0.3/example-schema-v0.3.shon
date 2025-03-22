@@ -1,0 +1,41 @@
+
+@schema.person {
+    type: "object",
+    keys: {
+        name: {
+            type: "string",
+            required: true,
+            comment: "Full name"
+        },
+        phone: {
+            type: "string",
+            pattern: "^\d{3}-\d{3}-\d{4}$",
+            comment: "US phone format"
+        },
+        bio: {
+            type: "string"
+        },
+        tags: {
+            type: "array",
+            items: { type: "string" }
+        }
+    }
+}
+
+@schema.config {
+    type: "object",
+    keys: {
+        "app.settings.theme": {
+            type: "string",
+            enum: ["light", "dark"],
+            namespacedKey: true,
+            comment: "Visual theme"
+        },
+        "app.settings.mode": {
+            type: "string",
+            enum: ["dev", "prod"],
+            namespacedKey: true,
+            comment: "Runtime mode"
+        }
+    }
+}

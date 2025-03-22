@@ -1,0 +1,22 @@
+
+@schema.person {
+    type: "object",
+    keys: {
+        name: { type: "string", required: true },
+        bio: { type: "string" },
+        address: { type: "ref", namespace: "address" },
+        tags: {
+            type: "array",
+            items: { type: "string" }
+        }
+    }
+}
+
+@schema.address {
+    type: "object",
+    keys: {
+        street: { type: "string", required: true },
+        city: { type: "string" },
+        zip: { type: "string" }
+    }
+}

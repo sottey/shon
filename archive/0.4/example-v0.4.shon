@@ -1,0 +1,33 @@
+
+@const {
+    US_PHONE_PATTERN: "^\d{3}-\d{3}-\d{4}$"
+}
+
+@alias {
+    addr: address
+}
+
+@address {
+    hq: {
+        street: "1234 S Main Street",
+        city: "Palm Springs",
+        zip: "92264"
+    }
+}
+
+@person {
+    sean: {
+        name: "Sean",
+        phone: "123-456-7890",
+        address: &addr.hq,
+        $type: "user",
+        $tags: ["admin", "beta"]
+    },
+    ellie: {
+        name: "Ellie",
+        phone: "234-567-8901",
+        address: &addr.hq,
+        $type: "user",
+        $tags: ["employee"]
+    }
+}

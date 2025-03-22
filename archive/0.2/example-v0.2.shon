@@ -1,0 +1,21 @@
+
+// Multi-line strings, quoted keys, trailing commas, and references
+@address {
+    hq: {
+        "street": "1234 S Main Street",
+        city: "Palm Springs",
+        zip: "92264",
+    },
+}
+
+@person {
+    sean: {
+        name: "Sean",
+        bio: '''
+            Developer. Manager. Comic.
+            Based in Palm Springs.
+        ''',
+        address: &address.hq,
+        tags: ["go", "self-hosting", "automation",],
+    },
+}

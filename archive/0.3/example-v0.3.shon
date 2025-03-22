@@ -1,0 +1,27 @@
+
+@include "./address.shon"
+
+// A person with metadata and field-level comments
+@person {
+    sean: {
+        name: "Sean",
+        phone: "123-456-7890", // Mobile number
+        _comment.phone: "Must match US format",
+        bio: '''
+            Developer. Comic. Palm Springs resident.
+            Works with Go, automation, and home-lab tech.
+        ''',
+        tags: ["go", "automation", "homelab",],
+    },
+    ellie: {
+        name: "Ellie",
+        phone: "234-567-8901",
+        tags: ["python", "product",],
+    }
+}
+
+// Application configuration using namespaced keys
+@config {
+    app.settings.theme: "dark",
+    app.settings.mode: "dev",
+}
