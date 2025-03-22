@@ -1,0 +1,24 @@
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
+
+# Binaries (in bin/ or anywhere)
+bin/
+**/bin/
+**/build/
+*.exe
+*.out
+*.bin
+
+# Compiled Go binaries (just in case)
+*.exe
+*.test
+
+# Temporary or backup files
+*.swp
+*.bak
+*.tmp
+
+# Misc
+**/.vscode/
+
