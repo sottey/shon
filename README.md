@@ -1,147 +1,109 @@
-# 📝 SHON Specification (v0.5)
+# SHON Specification v0.6
 
-**SHON (Simple Human-Oriented Notation)** is a human-friendly structured data format designed for readability, validation, and tooling. It is inspired by JSON, but supports comments, namespaces, references, and other extensions suited for configuration and modeling tasks.
-
----
-
-## 🎯 Goals
-
-- Be readable and writable by humans
-- Support structured data like objects and arrays
-- Include metadata and schema linkage
-- Support comments and modular structure
-- Be easily usable with statically typed languages like Go
+SHON (Structured Human-Optimized Notation) is a data serialization format designed for readability, schema support, and practical use in modern systems. Version 0.6 introduces advanced types and syntax improvements.
 
 ---
 
-## 🧱 Syntax Overview
+## 🔧 Syntax Features
 
-### Data Types
+### ✅ Comments
+- **Single-line**: `// comment here`
+- **Multi-line**: `/* this is a
+   multi-line comment */`
 
-| Type     | Example |
-|----------|---------|
-| String   | `"hello"` or `'''multi-line'''` |
-| Number   | `123`, `3.14` |
-| Boolean  | `true`, `false` |
-| Null     | `null` |
-| Object   | `{ key: value }` |
-| Array    | `[1, 2, 3,]` (trailing comma allowed) |
-
----
-
-## 💬 Comments
-
+### ✅ Namespaces
 ```shon
-// This is a comment
-```
-
-- Only single-line comments are supported
-- May appear above, inline, or beside fields
-
----
-
-## 📦 Namespaces
-
-```shon
-@person {
-    sean: {
-        name: "Sean",
-        phone: "123-456-7890"
-    }
+@users {
+  ...
 }
 ```
 
-- Declared using `@namespaceName { ... }`
-- The body is a dictionary (object)
-- Keys must be unique within each namespace
+### ✅ Field Assignment
+```shon
+key: value
+```
 
 ---
 
-## 🔁 Includes
+## 📦 Supported Types
 
+| SHON Syntax              | Description                      |
+|--------------------------|----------------------------------|
+| `"string"`               | String                           |
+| `42`, `true`, `false`    | Number and boolean               |
+| `$decimal("12.34")`      | Decimal with precision           |
+| `$timestamp("2024-01-01T00:00:00Z")` | ISO 8601 timestamp      |
+| `$tuple(1, "a", true)`   | Anonymous tuple                  |
+| `Vec3(1.0, 2.0, 3.0)`    | Named tuple                      |
+| `[1, 2, 3]`              | Array                            |
+| `{ key: value }`         | Map or Struct (based on schema)  |
+| `&ref.to.path`           | Reference                        |
+
+---
+
+## 🧱 Data Structures
+
+### 🔹 Arrays
 ```shon
-@include "./file.shon"
+numbers: [1, 2, 3]
 ```
 
-- Includes other SHON files into the current context
-- Only top-level includes allowed
+### 🔹 Maps
+```shon
+translations: {
+    en: "Hello",
+    es: "Hola"
+}
+```
+
+### 🔹 Structs
+Structs look like maps but are validated against a schema with fixed fields.
+```shon
+user: {
+    name: "Sean",
+    active: true
+}
+```
+
+### 🔹 Tuples
+```shon
+$tuple(1, "a", true)
+Vec3(1.0, 2.0, 3.0) // Named tuple
+```
 
 ---
 
 ## 🔗 References
-
 ```shon
-address: &address.main
+manager: &people.sean
 ```
-
-- Use `&namespace.key` to reference another object
-- Use `&namespace.arrayField[code=US]` for filtered lookup — always returns an array
 
 ---
 
-## 🔧 Metadata Fields
-
-| Field     | Description |
-|-----------|-------------|
-| `$schema` | Path/URI to schema file for validation (optional) |
-| `$type`   | Logical type of the object (e.g., `"user"`, `"admin"`) |
-| `$tags`   | Array of descriptive strings used for filtering, environments, etc. |
+## 🕓 Timestamps
+```shon
+created: $timestamp("2025-03-22T14:30:00Z")
+```
 
 ---
 
-## 🗃 Constants
-
+## 💵 Decimals
 ```shon
-@const {
-    US_PHONE_PATTERN: "^\d{3}-\d{3}-\d{4}$"
-}
+price: $decimal("19.95")
 ```
-
-- Reusable values for schemas, validation, etc.
-- Currently not evaluated in-place (used by tools/schemas)
 
 ---
 
-## 📛 Namespace Aliases
-
+## 🔄 Example
 ```shon
-@alias {
-    addr: address
+@invoice {
+    id: "INV001",
+    total: $decimal("1042.75"),
+    created: $timestamp("2025-03-22T10:00:00Z"),
+    items: [
+        $tuple("Widget", 3, $decimal("9.99"))
+    ],
+    paid: false
 }
 ```
 
-- Allows shortened references like `&addr.main`
-
----
-
-## 📝 Example
-
-```shon
-$schema: "./schemas/person.shon"
-
-@const {
-    US_PHONE_PATTERN: "^\d{3}-\d{3}-\d{4}$"
-}
-
-@alias {
-    addr: address
-}
-
-@address {
-    main: {
-        street: "1234 S Main Street",
-        city: "Palm Springs",
-        zip: "92264"
-    }
-}
-
-@person {
-    sean: {
-        name: "Sean",
-        phone: "123-456-7890",
-        address: &addr.main,
-        $type: "user",
-        $tags: ["admin", "beta"]
-    }
-}
-```
