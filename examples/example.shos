@@ -1,0 +1,38 @@
+$schema: "0.6"
+
+@invoice {
+    type: "struct",
+    properties: {
+        id: { type: "string" },
+        customer: {
+            type: "struct",
+            properties: {
+                name: { type: "string" },
+                address: { type: "ref" }
+            },
+            required: ["name", "address"]
+        },
+        issued: { type: "timestamp" },
+        total: { type: "decimal" },
+        items: {
+            type: "array",
+            items: {
+                type: "tuple",
+                items: ["string", "integer", "decimal"]
+            }
+        },
+        paid: { type: "boolean" }
+    },
+    required: ["id", "customer", "issued", "total", "items"]
+}
+
+@address {
+    type: "struct",
+    properties: {
+        line1: { type: "string" },
+        city: { type: "string" },
+        state: { type: "string" },
+        postal: { type: "string" }
+    },
+    required: ["line1", "city", "state", "postal"]
+}

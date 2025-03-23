@@ -1,0 +1,27 @@
+$schema: "./example.shos"
+
+/* Example SHON v0.6 data using all supported features */
+
+@invoice {
+    id: "INV-0001",
+    customer: {
+        name: "Sean Ottey",
+        address: &address.main,
+    },
+    issued: $timestamp("2025-03-22T10:30:00Z"),
+    total: $decimal("1042.75"),
+    items: [
+        Item("Widget", 3, $decimal("19.99")),
+        Item("Gadget", 2, $decimal("149.95")),
+    ],
+    paid: false
+}
+
+@address {
+    main: {
+        line1: "1234 Main St",
+        city: "Palm Springs",
+        state: "CA",
+        postal: "92264"
+    }
+}
