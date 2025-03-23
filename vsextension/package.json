@@ -1,24 +1,32 @@
-{
+  {
     "name": "shon",
     "displayName": "SHON",
     "description": "Syntax highlighting and schema validation for SHON 0.6",
     "version": "0.6.0",
-    "publisher": "sean",
+    "publisher": "sottey",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/sottey/shon.git"
+    },    
     "engines": {
       "vscode": "^1.50.0"
     },
     "categories": ["Programming Languages"],
     "contributes": {
-      "languages": [{
-        "id": "shon",
-        "aliases": ["SHON", "shon"],
-        "extensions": [".shon"],
-        "configuration": "./language-configuration.json"
-      }],
-      "grammars": [{
-        "language": "shon",
-        "scopeName": "source.shon",
-        "path": "./syntaxes/shon.tmLanguage.json"
-      }]
+      "languages": [
+        {
+          "id": "shon",
+          "aliases": ["SHON", "shon"],
+          "extensions": [".shon", ".shos"],
+          "configuration": "./language-configuration.json"
+        }
+      ],
+      "grammars": [
+        {
+          "language": "shon",
+          "scopeName": "source.shon",
+          "path": "./syntaxes/shon.tmLanguage.json"
+        }
+      ]
     }
   }
