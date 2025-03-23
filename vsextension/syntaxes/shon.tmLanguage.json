@@ -1,0 +1,44 @@
+{
+    "scopeName": "source.shon",
+    "patterns": [
+      {
+        "name": "keyword.control.shon",
+        "match": "@[a-zA-Z0-9_]+"
+      },
+      {
+        "name": "support.function.shon",
+        "match": "\\$[a-zA-Z_][a-zA-Z0-9_]*\\([^)]*\\)"
+      },
+      {
+        "name": "variable.other.shon",
+        "match": "[a-zA-Z_][a-zA-Z0-9_]*(?=:)"
+  
+      },
+      {
+        "name": "string.quoted.double.shon",
+        "begin": "\"",
+        "end": "\"",
+        "patterns": [{
+          "name": "constant.character.escape.shon",
+          "match": "\\\\."
+        }]
+      },
+      {
+        "name": "constant.numeric.shon",
+        "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+      },
+      {
+        "name": "comment.line.double-slash.shon",
+        "match": "//.*$"
+      },
+      {
+        "name": "comment.block.shon",
+        "begin": "/\\*",
+        "end": "\\*/"
+      },
+      {
+        "name": "entity.name.tag.shon",
+        "match": "&[a-zA-Z0-9_.]+"
+      }
+    ]
+  }
