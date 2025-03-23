@@ -1,10 +1,10 @@
 NOW:
-- Tuples (allow named)
-- Multi line comments
-- Maps
-- Decimal type
-- Timestamp type
-- Structs
+- ~~ Tuples (allow named) ~~
+- ~~ Multi line comments ~~
+- ~~ Maps ~~
+- ~~ Decimal type ~~
+- ~~ Timestamp type ~~
+- ~~ Structs ~~
 
 
 
