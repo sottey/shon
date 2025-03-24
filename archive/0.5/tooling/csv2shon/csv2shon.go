@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -63,7 +62,7 @@ func main() {
 
 	// Decide if the column should use refs
 	for key, values := range occurrence {
-		if len(values) < len(rows)-1 { // column has at least one duplicate
+		if len(values) < len(rows)-1 {
 			refColumns[key] = true
 			refs[key] = make(map[string]string)
 			for val := range values {
@@ -90,8 +89,8 @@ func main() {
 
 	// Generate SHON
 	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("$schema: \"%s.shos\"\n\n", outputPath))
 	builder.WriteString(fmt.Sprintf("@%s {\n", namespace))
-
 	builder.WriteString("    records: [\n")
 	for _, rec := range records {
 		builder.WriteString("        {\n")
@@ -102,7 +101,7 @@ func main() {
 	}
 	builder.WriteString("    ],\n")
 
-	// Add @refs blocks for columns that used them
+	// Add @refs blocks
 	for key, values := range refs {
 		refName := strings.ToLower(key)
 		builder.WriteString(fmt.Sprintf("    @%s {\n", refName))

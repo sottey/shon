@@ -1,38 +1,25 @@
 $schema: "0.6"
 
-@invoice {
-    type: "struct",
-    properties: {
-        id: { type: "string" },
-        customer: {
-            type: "struct",
-            properties: {
-                name: { type: "string" },
-                address: { type: "ref" }
-            },
-            required: ["name", "address"]
-        },
-        issued: { type: "timestamp" },
-        total: { type: "decimal" },
-        items: {
-            type: "array",
-            items: {
-                type: "tuple",
-                items: ["string", "integer", "decimal"]
-            }
-        },
-        paid: { type: "boolean" }
+@user {
+  type: "struct",
+  properties: {
+    id: { type: "string" },
+    name: { type: "string" },
+    active: { type: "boolean" },
+    created: { type: "timestamp" },
+    balance: { type: "decimal" },
+    tags: {
+      type: "array",
+      items: { type: "string" }
     },
-    required: ["id", "customer", "issued", "total", "items"]
-}
-
-@address {
-    type: "struct",
-    properties: {
-        line1: { type: "string" },
+    location: {
+      type: "struct",
+      properties: {
         city: { type: "string" },
-        state: { type: "string" },
-        postal: { type: "string" }
-    },
-    required: ["line1", "city", "state", "postal"]
+        state: { type: "string" }
+      },
+      required: ["city", "state"]
+    }
+  },
+  required: ["id", "name", "active", "created", "balance", "tags", "location"]
 }

@@ -1,115 +1,82 @@
-
 package main
 
 import (
-    "encoding/json"
-    "errors"
-    "flag"
-    "fmt"
-    "os"
-    "regexp"
-    "sort"
-    "strings"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"os"
+	"regexp"
+	"strings"
 )
 
 func main() {
-    var inputPath, outputPath string
-    var sortKeys bool
-    flag.StringVar(&inputPath, "in", "", "Input SHON file")
-    flag.StringVar(&outputPath, "out", "", "Output JSON file")
-    flag.BoolVar(&sortKeys, "sort", false, "Sort top-level object keys alphabetically (default: false)")
-    flag.Parse()
+	var inputPath, outputPath string
+	flag.StringVar(&inputPath, "in", "", "Input SHON file")
+	flag.StringVar(&outputPath, "out", "", "Output JSON file")
+	flag.Parse()
 
-    if inputPath == "" || outputPath == "" {
-        fmt.Println("Usage: shon2json -in input.shon -out output.json [--sort]")
-        os.Exit(1)
-    }
+	if inputPath == "" || outputPath == "" {
+		fmt.Println("Usage: shon2json -in file.shon -out output.json")
+		os.Exit(1)
+	}
 
-    input, err := os.ReadFile(inputPath)
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Failed to read SHON file: %v\n", err)
-        os.Exit(1)
-    }
+	content, err := os.ReadFile(inputPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read SHON file: %v\n", err)
+		os.Exit(1)
+	}
 
-    jsonText, err := shonToJSON(string(input), sortKeys)
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Failed to convert SHON to JSON: %v\n", err)
-        os.Exit(1)
-    }
+	raw := string(content)
 
-    err = os.WriteFile(outputPath, []byte(jsonText), 0644)
-    if err != nil {
-        fmt.Fprintf(os.Stderr, "Failed to write output file: %v\n", err)
-        os.Exit(1)
-    }
+	// Remove $schema line
+	raw = regexp.MustCompile(`(?m)^\$schema:.*\n?`).ReplaceAllString(raw, "")
 
-    fmt.Printf("✔ JSON written to %s\n", outputPath)
-}
+	// Remove multi-line and single-line comments
+	raw = regexp.MustCompile(`/\*.*?\*/`).ReplaceAllString(raw, "")
+	raw = regexp.MustCompile(`(?m)^\s*//.*`).ReplaceAllString(raw, "")
 
-func shonToJSON(shon string, sortKeys bool) (string, error) {
-    lines := strings.Split(shon, "\n")
-    var clean []string
-    insideNamespace := false
+	// Convert typed values
+	raw = strings.ReplaceAll(raw, "$decimal(", "")
+	raw = strings.ReplaceAll(raw, "$timestamp(", "")
+	raw = strings.ReplaceAll(raw, "$tuple(", "[")
+	raw = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\(`).ReplaceAllString(raw, "[") // named tuple
 
-    for _, line := range lines {
-        trimmed := strings.TrimSpace(line)
-        if strings.HasPrefix(trimmed, "//") || strings.HasPrefix(trimmed, "$schema") || trimmed == "" {
-            continue
-        }
-        if strings.HasPrefix(trimmed, "@") && strings.Contains(trimmed, "{") {
-            insideNamespace = true
-            continue
-        }
-        if insideNamespace && trimmed == "}" {
-            insideNamespace = false
-            continue
-        }
+	// Close open parentheses
+	raw = strings.ReplaceAll(raw, ")", "]")
 
-        if insideNamespace {
-            line = regexp.MustCompile(`//.*$`).ReplaceAllString(line, "")
-            clean = append(clean, line)
-        }
-    }
+	// Replace refs with strings
+	raw = regexp.MustCompile(`&([a-zA-Z0-9_\.]+)`).ReplaceAllString(raw, `"$1"`)
 
-    raw := "{" + strings.Join(clean, "\n") + "}}"
+	// Quote keys
+	raw = regexp.MustCompile(`(?m)^\s*([a-zA-Z_][a-zA-Z0-9_]*):`).ReplaceAllString(raw, `"$1":`)
+	raw = regexp.MustCompile(`(?m)([^"\s][a-zA-Z0-9_]*):`).ReplaceAllString(raw, `"$1":`)
 
-    // Quote top-level and nested keys
-    raw = strings.ReplaceAll(raw, "'", "\"")
-    raw = regexp.MustCompile(`(?m)^(\s*)([a-zA-Z0-9_.$]+)\s*:`).ReplaceAllString(raw, `$1"$2":`)
-    raw = regexp.MustCompile(`^{\s*([a-zA-Z0-9_.$]+)\s*:`).ReplaceAllString(raw, `{"$1":`)
-    raw = regexp.MustCompile(`([{,]\s*)([a-zA-Z0-9_.$]+)\s*:`).ReplaceAllString(raw, `$1"$2":`)
+	// Remove @namespace {
+	raw = regexp.MustCompile(`(?m)^@([a-zA-Z0-9_]+)\s*\{`).ReplaceAllString(raw, `{`)
 
-    // Fix missing commas between top-level keys
-    raw = regexp.MustCompile(`}\s*\n\s*"[^"]+":`).ReplaceAllStringFunc(raw, func(match string) string {
-        return "},\n" + match[strings.Index(match, "\""):]
-    })
-    raw = regexp.MustCompile(`}\s*("[^"]+":)`).ReplaceAllString(raw, "}, $1")
+	// Final cleanup
+	raw = strings.TrimSpace(raw)
+	if !strings.HasSuffix(raw, "}") {
+		raw += "}"
+	}
 
-    raw = strings.ReplaceAll(raw, ",}", "}")
-    raw = strings.ReplaceAll(raw, ",]", "]")
+	var parsed interface{}
+	err = json.Unmarshal([]byte(raw), &parsed)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to convert SHON to JSON: %v\n", err)
+		os.Exit(1)
+	}
 
-    var parsed map[string]interface{}
-    if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
-        return "", errors.New("invalid SHON structure after conversion: " + err.Error())
-    }
+	jsonOut, err := json.MarshalIndent(parsed, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to encode JSON: %v\n", err)
+		os.Exit(1)
+	}
 
-    if sortKeys {
-        sorted := make(map[string]interface{}, len(parsed))
-        keys := make([]string, 0, len(parsed))
-        for k := range parsed {
-            keys = append(keys, k)
-        }
-        sort.Strings(keys)
-        for _, k := range keys {
-            sorted[k] = parsed[k]
-        }
-        parsed = sorted
-    }
+	if err := os.WriteFile(outputPath+".json", jsonOut, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to write JSON file: %v\n", err)
+		os.Exit(1)
+	}
 
-    jsonBytes, err := json.MarshalIndent(parsed, "", "  ")
-    if err != nil {
-        return "", err
-    }
-
-    return string(jsonBytes), nil
+	fmt.Printf("✔ JSON written to %s.json\n", outputPath)
 }

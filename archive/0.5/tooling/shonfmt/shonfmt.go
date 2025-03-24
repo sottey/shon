@@ -1,8 +1,6 @@
-
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -10,97 +8,73 @@ import (
 )
 
 func main() {
-	var inputPath, outputPath string
-	var useTrailingCommas bool
+	var inputPath string
 	var minify bool
-
-	flag.StringVar(&inputPath, "in", "", "Input SHON file to format")
-	flag.StringVar(&outputPath, "out", "", "Output file (optional)")
-	flag.BoolVar(&useTrailingCommas, "trailing-commas", false, "Add trailing commas to arrays/objects")
-	flag.BoolVar(&minify, "minify", false, "Minify the SHON output (no indentation or newlines)")
+	flag.StringVar(&inputPath, "in", "", "Input SHON file")
+	flag.BoolVar(&minify, "minify", false, "Minify the SHON output")
 	flag.Parse()
 
 	if inputPath == "" {
-		fmt.Println("Usage: shonfmt -in input.shon [-out output.shon] [--trailing-commas] [--minify]")
+		fmt.Println("Usage: shonfmt -in file.shon [-minify]")
 		os.Exit(1)
 	}
 
-	input, err := os.ReadFile(inputPath)
+	data, err := os.ReadFile(inputPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read file: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to read SHON file: %v\n", err)
 		os.Exit(1)
 	}
 
-	var formatted string
-	if minify {
-		formatted = minifySHON(string(input))
-	} else {
-		formatted = formatSHON(string(input), useTrailingCommas)
-	}
+	lines := strings.Split(string(data), "\n")
+	var out strings.Builder
+	indent := 0
+	inMultilineComment := false
 
-	if outputPath != "" {
-		err := os.WriteFile(outputPath, []byte(formatted), 0644)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to write output: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("✔ SHON written to %s\n", outputPath)
-	} else {
-		fmt.Println(formatted)
-	}
-}
-
-func formatSHON(input string, trailingCommas bool) string {
-	var result []string
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	indentLevel := 0
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		// Preserve $schema or comments
-		if strings.HasPrefix(line, "$schema") || strings.HasPrefix(line, "//") {
-			result = append(result, line)
-			continue
-		}
-		if line == "" {
-			result = append(result, "")
-			continue
-		}
-
-		opening := strings.Count(line, "{") + strings.Count(line, "[")
-		closing := strings.Count(line, "}") + strings.Count(line, "]")
-
-		if closing > opening {
-			indentLevel--
-		}
-
-		indent := strings.Repeat("    ", indentLevel)
-		formattedLine := indent + line
-
-		if trailingCommas && (strings.HasSuffix(line, "}") || strings.HasSuffix(line, "]")) &&
-			!strings.HasSuffix(line, "},") && !strings.HasSuffix(line, "],") {
-			formattedLine += ","
-		}
-
-		result = append(result, formattedLine)
-
-		if opening > closing {
-			indentLevel++
-		}
-	}
-	return strings.Join(result, "\n")
-}
-
-func minifySHON(input string) string {
-	var result []string
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "//") {
+
+		if strings.HasPrefix(trimmed, "/*") {
+			inMultilineComment = true
+		}
+
+		if inMultilineComment {
+			if !minify {
+				out.WriteString(indentLine(indent, trimmed) + "\n")
+			}
+			if strings.Contains(trimmed, "*/") {
+				inMultilineComment = false
+			}
 			continue
 		}
-		result = append(result, trimmed)
+
+		if trimmed == "" {
+			if !minify {
+				out.WriteString("\n")
+			}
+			continue
+		}
+
+		openBraces := strings.Count(trimmed, "{") + strings.Count(trimmed, "[")
+		closeBraces := strings.Count(trimmed, "}") + strings.Count(trimmed, "]")
+
+		if closeBraces > openBraces {
+			indent--
+		}
+
+		if minify {
+			out.WriteString(strings.TrimSpace(trimmed))
+		} else {
+			out.WriteString(indentLine(indent, trimmed) + "\n")
+		}
+
+		if openBraces > closeBraces {
+			indent++
+		}
 	}
-	return strings.Join(result, "")
+
+	fmt.Println(out.String())
+}
+
+func indentLine(level int, line string) string {
+	return strings.Repeat("    ", level) + line
 }
