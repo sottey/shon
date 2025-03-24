@@ -1,20 +1,14 @@
 # Makefile for building SHON v0.6 tools
 
-TOOLS = csv2shon json2shon shon2json shonfmt
+TOOLS = shon vsc
 
 all: $(TOOLS)
 
-csv2shon: ./tooling/csv2shon/csv2shon.go
-	go build -o bin/csv2shon ./tooling/csv2shon/csv2shon.go
+shon: ./tooling/
+	go build -o bin/shon ./tooling/shon/
 
-json2shon: ./tooling/json2shon/json2shon.go
-	go build -o bin/json2shon ./tooling/json2shon/json2shon.go
-
-shon2json: ./tooling/shon2json/shon2json.go
-	go build -o bin/shon2json ./tooling/shon2json/shon2json.go
-
-shonfmt: ./tooling/shonfmt/shonfmt.go
-	go build -o bin/shonfmt ./tooling/shonfmt/shonfmt.go
+vsc: ./tooling/vsextension
+	cd ~/projects/shon/tooling/vsextension && vsce package --out ../../bin
 
 clean:
 	rm -rf bin
