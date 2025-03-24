@@ -1,0 +1,14 @@
+$schema: "./clean.shos"
+
+@user {
+  id: "001",
+  name: "Sean",
+  active: true,
+  created: $timestamp("2025-03-22T14:45:00Z"),
+  balance: $decimal("1042.75"),
+  tags: ["dev", "golang"],
+  location: {
+    city: "Palm Springs",
+    state: "CA"
+  }
+}

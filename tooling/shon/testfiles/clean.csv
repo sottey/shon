@@ -1,0 +1,2 @@
+id,name,active,created,balance,tags,city,state
+001,Sean,true,2025-03-22T14:45:00Z,1042.75,"dev;golang",Palm Springs,CA

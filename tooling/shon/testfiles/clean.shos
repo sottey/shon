@@ -1,0 +1,25 @@
+$schema: "0.6"
+
+@user {
+  type: "struct",
+  properties: {
+    id: { type: "string" },
+    name: { type: "string" },
+    active: { type: "boolean" },
+    created: { type: "timestamp" },
+    balance: { type: "decimal" },
+    tags: {
+      type: "array",
+      items: { type: "string" }
+    },
+    location: {
+      type: "struct",
+      properties: {
+        city: { type: "string" },
+        state: { type: "string" }
+      },
+      required: ["city", "state"]
+    }
+  },
+  required: ["id", "name", "active", "created", "balance", "tags", "location"]
+}
