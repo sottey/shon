@@ -28,9 +28,11 @@ import (
 )
 
 var (
-	InputFile  string
-	OutputFile string
-	SortKeys   bool
+	InputFile   string
+	OutputFile  string
+	SortKeys    bool
+	Verbose     bool
+	Indentation int
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -47,7 +49,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&InputFile, "in", "i", "", "File path of input file")
-	rootCmd.PersistentFlags().StringVarP(&OutputFile, "out", "o", "", "File path of output file")
+	rootCmd.PersistentFlags().StringVarP(&InputFile, "input", "i", "", "File path of input file")
+	rootCmd.PersistentFlags().StringVarP(&OutputFile, "output", "o", "", "File path of output file")
 	rootCmd.PersistentFlags().BoolVarP(&SortKeys, "sort", "s", false, "If present, keys will be sorted alphabetically")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "If present, additional information will be displayed")
+	rootCmd.PersistentFlags().IntVarP(&Indentation, "indentation-size", "n", 4, "Number of spaces to use for each level of indentation (Default: 4)")
 }

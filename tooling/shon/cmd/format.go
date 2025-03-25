@@ -27,6 +27,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sottey/shon/tooling/shon/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +40,8 @@ var formatCmd = &cobra.Command{
 	Use:   "format",
 	Short: "Beautify or minimfy SHON",
 	Run: func(cmd *cobra.Command, args []string) {
+		pkg.DebugPrint("Starting format", Verbose)
+
 		if InputFile == "" {
 			fmt.Println("No input file specified. Cancelling.")
 			return
@@ -52,19 +55,21 @@ var formatCmd = &cobra.Command{
 
 		lines := strings.Split(string(data), "\n")
 		var out strings.Builder
-		indent := 0
+		level := 0
 		inMultilineComment := false
 
 		for _, line := range lines {
+			pkg.DebugPrint("Trimming Space...", Verbose)
 			trimmed := strings.TrimSpace(line)
 
+			pkg.DebugPrint("Removing comments...", Verbose)
 			if strings.HasPrefix(trimmed, "/*") {
 				inMultilineComment = true
 			}
 
 			if inMultilineComment {
 				if !minify {
-					out.WriteString(indentLine(indent, trimmed) + "\n")
+					out.WriteString(pkg.IndentLine(level, Indentation, trimmed) + "\n")
 				}
 				if strings.Contains(trimmed, "*/") {
 					inMultilineComment = false
@@ -79,21 +84,22 @@ var formatCmd = &cobra.Command{
 				continue
 			}
 
+			pkg.DebugPrint("Cleaning up brackets", Verbose)
 			openBraces := strings.Count(trimmed, "{") + strings.Count(trimmed, "[")
 			closeBraces := strings.Count(trimmed, "}") + strings.Count(trimmed, "]")
 
 			if closeBraces > openBraces {
-				indent--
+				level--
 			}
 
 			if minify {
 				out.WriteString(strings.TrimSpace(trimmed))
 			} else {
-				out.WriteString(indentLine(indent, trimmed) + "\n")
+				out.WriteString(pkg.IndentLine(level, Indentation, trimmed) + "\n")
 			}
 
 			if openBraces > closeBraces {
-				indent++
+				level++
 			}
 		}
 
@@ -107,14 +113,11 @@ var formatCmd = &cobra.Command{
 			}
 		}
 
+		pkg.DebugPrint("Format complete", Verbose)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(formatCmd)
 	formatCmd.Flags().BoolVarP(&minify, "minify", "m", false, "Minify shon (remove whitespace)")
-}
-
-func indentLine(level int, line string) string {
-	return strings.Repeat("    ", level) + line
 }

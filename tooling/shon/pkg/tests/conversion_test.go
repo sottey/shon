@@ -1,8 +1,10 @@
 package pkg_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -83,6 +85,71 @@ func TestShonToJson(t *testing.T) {
 	result := readFile(t, out)
 	if !strings.Contains(result, `"created": "2025-03-22T14:45:00Z"`) {
 		t.Error("timestamp not correctly converted to JSON")
+	}
+}
+
+func TestJsonShonRoundTrip(t *testing.T) {
+	// Test json data
+	jsonData := `{
+		"id": "001",
+		"name": "Sean",
+		"active": true,
+		"balance": "1042.75",
+		"created": "2025-03-22T14:45:00Z",
+		"tags": ["dev", "golang"],
+		"location": {
+			"city": "Palm Springs",
+			"state": "CA"
+		}
+	}`
+
+	// Create the temp file with the test data
+	inputJsonFile := writeTempFile(t, "input.json", jsonData)
+
+	// Build the output path
+	outputShonFile := filepath.Join(t.TempDir(), "output.shon")
+
+	// Convert the test data to SHON
+	err := pkg.JsonToShon(inputJsonFile, outputShonFile, true)
+	if err != nil {
+		t.Fatalf("JsonToShon failed: %v", err)
+	}
+
+	// Read in the output (SHON data)
+	shonData := readFile(t, outputShonFile)
+	if !strings.Contains(shonData, "@data") {
+		t.Error("SHON output missing @data block")
+	}
+	if !strings.Contains(shonData, `$timestamp("2025-03-22T14:45:00Z")`) {
+		t.Error("timestamp type not preserved")
+	}
+
+	// Create a new output file for the json
+	outputJsonFile := filepath.Join(t.TempDir(), "output.json")
+
+	// Create the output file via conversion
+	err = pkg.ShonToJson(outputShonFile, outputJsonFile)
+	if err != nil {
+		t.Fatalf("ShonToJson failed: %v", err)
+	}
+
+	// Normalize both JSON data items before comparison
+	var originalObj, roundTripObj interface{}
+	if err := json.Unmarshal([]byte(jsonData), &originalObj); err != nil {
+		t.Fatalf("Failed to unmarshal input JSON: %v", err)
+	}
+
+	// Read in the final json output
+	jsonDataResult := readFile(t, outputJsonFile)
+	if err := json.Unmarshal([]byte(jsonDataResult), &roundTripObj); err != nil {
+		t.Fatalf("Failed to unmarshal output JSON: %v", err)
+	}
+
+	// do the compare
+	if !reflect.DeepEqual(originalObj, roundTripObj) {
+		prettyInput, _ := json.MarshalIndent(originalObj, "", "  ")
+		prettyOutput, _ := json.MarshalIndent(roundTripObj, "", "  ")
+		t.Errorf("Round-trip data mismatch:\nInput:\n%s\n\nOutput:\n%s", prettyInput, prettyOutput)
 	}
 }
 
